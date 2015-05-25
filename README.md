@@ -4,11 +4,11 @@ A Go tool to concurrently read a file of newline separated IP addresses and coun
 ## Example
 
 Reading from stdin
-```golang
+```bash
 cat ips_file | ./sauron -state="PA" -geoip="/usr/share/GeoIP/GeoIP2-City.mmdb"
 ```
 
 Reading from a file
-```golang
+```bash
 ./sauron -state="PA" -geoip="/usr/share/GeoIP/GeoIP2-City.mmdb" -input="ips_file"
 ```
