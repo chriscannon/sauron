@@ -8,6 +8,7 @@ import (
 	"os"
 
 	"github.com/oschwald/geoip2-golang"
+	"sync"
 )
 
 type Result struct {
@@ -22,8 +23,9 @@ func Run(geoIpFilePath string, state string, inputFile *os.File) (*Result, error
 	workers := runtime.NumCPU()
 	runtime.GOMAXPROCS(workers)
 
-	ips := make(chan string, workers)
+	ips := make(chan string)
 	results := make(chan Result, workers)
+	closer := make(chan struct{})
 
 	db, err := geoip2.Open(geoIpFilePath)
 	defer db.Close()
@@ -32,60 +34,69 @@ func Run(geoIpFilePath string, state string, inputFile *os.File) (*Result, error
 		return nil, err
 	}
 
-	go readIps(ips, inputFile)
-
+	wg := new(sync.WaitGroup)
 	for i := 0; i < workers; i++ {
-		go lookupIps(state, db, ips, results)
+		wg.Add(1)
+		go lookupIps(state, db, ips, results, closer, wg)
 	}
 
+	go readIps(ips, results, closer, inputFile, wg)
+
 	result := Result{0, 0, 0, 0, 0}
-	for i := 0; i < workers; i++ {
-		workerResult := <-results
-		result.TotalLines += workerResult.TotalLines
-		result.Matches += workerResult.Matches
-		result.ParseErrors += workerResult.ParseErrors
-		result.NoStateErrors += workerResult.NoStateErrors
-		result.LookupErrors += workerResult.LookupErrors
+	for r := range results {
+		result.TotalLines += 1
+		result.Matches += r.Matches
+		result.ParseErrors += r.ParseErrors
+		result.NoStateErrors += r.NoStateErrors
+		result.LookupErrors += r.LookupErrors
 	}
 
 	return &result, nil
 }
 
-func lookupIps(state string, db *geoip2.Reader, ips chan string, results chan Result) {
-	result := Result{0, 0, 0, 0, 0}
-	for ipString := range ips {
-		result.TotalLines++
-
-		ip := net.ParseIP(ipString)
-		if ip == nil {
-			result.ParseErrors++
-			continue
-		}
-
-		record, err := db.City(ip)
-
-		if err != nil {
-			result.LookupErrors++
-		}
-
-		if len(record.Subdivisions) == 0 {
-			result.NoStateErrors++
-			continue
-		}
-
-		if record.Subdivisions[0].IsoCode == state {
-			result.Matches++
+func lookupIps(state string, db *geoip2.Reader, ipInput chan string, resultsOutput chan Result, closer chan struct{}, wg *sync.WaitGroup) {
+	RUNLOOP:
+	for {
+		select {
+		case ipString := <-ipInput:
+			resultsOutput <- getIpResult(ipString, db, state)
+		case <-closer:
+			break RUNLOOP
 		}
 	}
-	results <- result
+	wg.Done()
 }
 
-func readIps(ips chan string, file *os.File) {
+func getIpResult(ipString string, db *geoip2.Reader, state string) (Result) {
+	ip := net.ParseIP(ipString)
+	if ip == nil {
+		return Result{ParseErrors:1}
+	}
+
+	record, err := db.City(ip)
+
+	if err != nil {
+		return Result{LookupErrors:1}
+	}
+
+	if len(record.Subdivisions) == 0 {
+		return Result{NoStateErrors:1}
+	}
+
+	if record.Subdivisions[0].IsoCode == state {
+		return Result{Matches:1}
+	}
+
+	return Result{}
+}
+
+func readIps(input chan string, output chan Result, closer chan struct{}, file *os.File, wg *sync.WaitGroup) {
 	scanner := bufio.NewScanner(file)
 
 	for scanner.Scan() {
-		ips <- scanner.Text()
+		input <- scanner.Text()
 	}
-
-	close(ips)
+	close(closer)
+	wg.Wait()
+	close(output)
 }
