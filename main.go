@@ -7,9 +7,9 @@ import (
 	"strings"
 
 	"log"
-	"sauron/client"
 
 	"github.com/dustin/go-humanize"
+	"runtime/pprof"
 )
 
 var (
@@ -17,6 +17,7 @@ var (
 	flGeoIpFile = flag.String("geoip", "", "Set the path to the GeoIP2 City file")
 	flHelp      = flag.Bool("help", false, "Print usage")
 	flInputFile = flag.String("input", "", "Set the input file of IP addresses")
+	flCpuProfile = flag.Bool("cpuprof", false, "Write the CPU profile to a file")
 )
 
 func init() {
@@ -51,7 +52,6 @@ func main() {
 	inputFile := os.Stdin
 	if *flInputFile != "" {
 		file, err := os.Open(*flInputFile)
-
 		if err != nil {
 			log.Fatal(err)
 		}
@@ -59,7 +59,16 @@ func main() {
 	}
 	defer inputFile.Close()
 
-	result, err := client.Run(*flGeoIpFile, state, inputFile)
+	if *flCpuProfile {
+		f, err := os.Create("sauron.prof")
+        if err != nil {
+            log.Fatal(err)
+        }
+        pprof.StartCPUProfile(f)
+        defer pprof.StopCPUProfile()
+	}
+
+	result, err := Run(*flGeoIpFile, state, inputFile)
 
 	if err != nil {
 		log.Fatal(err)

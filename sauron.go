@@ -1,4 +1,4 @@
-package client
+package main
 
 import (
 	"bufio"
@@ -18,13 +18,11 @@ type Result struct {
 	TotalLines    int64
 }
 
-const ipChannelBufferSize = 10000
-
 func Run(geoIpFilePath string, state string, inputFile *os.File) (*Result, error) {
 	workers := runtime.NumCPU()
 	runtime.GOMAXPROCS(workers)
 
-	ips := make(chan string, ipChannelBufferSize)
+	ips := make(chan string, workers)
 	results := make(chan Result, workers)
 
 	db, err := geoip2.Open(geoIpFilePath)
