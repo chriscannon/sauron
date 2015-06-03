@@ -3,13 +3,12 @@ package main
 import (
 	"flag"
 	"fmt"
+	"log"
 	"os"
+	"runtime/pprof"
 	"strings"
 
-	"log"
-
 	"github.com/dustin/go-humanize"
-	"runtime/pprof"
 )
 
 var (

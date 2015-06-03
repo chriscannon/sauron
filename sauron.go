@@ -3,12 +3,11 @@ package main
 import (
 	"bufio"
 	"net"
-	"runtime"
-
 	"os"
+	"runtime"
+	"sync"
 
 	"github.com/oschwald/geoip2-golang"
-	"sync"
 )
 
 type Result struct {
