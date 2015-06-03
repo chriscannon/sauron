@@ -55,7 +55,7 @@ func Run(geoIpFilePath string, state string, inputFile *os.File) (*Result, error
 }
 
 func lookupIps(state string, db *geoip2.Reader, ipInput chan string, resultsOutput chan Result, closer chan struct{}, wg *sync.WaitGroup) {
-	RUNLOOP:
+RUNLOOP:
 	for {
 		select {
 		case ipString := <-ipInput:
@@ -67,24 +67,24 @@ func lookupIps(state string, db *geoip2.Reader, ipInput chan string, resultsOutp
 	wg.Done()
 }
 
-func getIpResult(ipString string, db *geoip2.Reader, state string) (Result) {
+func getIpResult(ipString string, db *geoip2.Reader, state string) Result {
 	ip := net.ParseIP(ipString)
 	if ip == nil {
-		return Result{ParseErrors:1}
+		return Result{ParseErrors: 1}
 	}
 
 	record, err := db.City(ip)
 
 	if err != nil {
-		return Result{LookupErrors:1}
+		return Result{LookupErrors: 1}
 	}
 
 	if len(record.Subdivisions) == 0 {
-		return Result{NoStateErrors:1}
+		return Result{NoStateErrors: 1}
 	}
 
 	if record.Subdivisions[0].IsoCode == state {
-		return Result{Matches:1}
+		return Result{Matches: 1}
 	}
 
 	return Result{}

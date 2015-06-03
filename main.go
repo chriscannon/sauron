@@ -13,10 +13,10 @@ import (
 )
 
 var (
-	flState     = flag.String("state", "", "Set the state (a.k.a. subdivision) to filter on")
-	flGeoIpFile = flag.String("geoip", "", "Set the path to the GeoIP2 City file")
-	flHelp      = flag.Bool("help", false, "Print usage")
-	flInputFile = flag.String("input", "", "Set the input file of IP addresses")
+	flState      = flag.String("state", "", "Set the state (a.k.a. subdivision) to filter on")
+	flGeoIpFile  = flag.String("geoip", "", "Set the path to the GeoIP2 City file")
+	flHelp       = flag.Bool("help", false, "Print usage")
+	flInputFile  = flag.String("input", "", "Set the input file of IP addresses")
 	flCpuProfile = flag.Bool("cpuprof", false, "Write the CPU profile to a file")
 )
 
@@ -61,11 +61,11 @@ func main() {
 
 	if *flCpuProfile {
 		f, err := os.Create("sauron.prof")
-        if err != nil {
-            log.Fatal(err)
-        }
-        pprof.StartCPUProfile(f)
-        defer pprof.StopCPUProfile()
+		if err != nil {
+			log.Fatal(err)
+		}
+		pprof.StartCPUProfile(f)
+		defer pprof.StopCPUProfile()
 	}
 
 	result, err := Run(*flGeoIpFile, state, inputFile)
