@@ -53,12 +53,12 @@ func makeWorkers(numWorkers int, db *geoip2.Reader, state string, file *os.File)
 	for i := 0; i < numWorkers; i++ {
 		wg.Add(1)
 		go func() {
-			LOOP:
+		LOOP:
 			for {
 				select {
-				case ip := <- inputChan:
+				case ip := <-inputChan:
 					outputChan <- parseIp(ip, db, state)
-				case <- closer:
+				case <-closer:
 					break LOOP
 				}
 			}
@@ -81,24 +81,24 @@ func makeWorkers(numWorkers int, db *geoip2.Reader, state string, file *os.File)
 	return outputChan
 }
 
-func parseIp(ipString string, db *geoip2.Reader, state string) (Result) {
+func parseIp(ipString string, db *geoip2.Reader, state string) Result {
 	ip := net.ParseIP(ipString)
 	if ip == nil {
-		return Result{ParseErrors:1}
+		return Result{ParseErrors: 1}
 	}
 
 	record, err := db.City(ip)
 
 	if err != nil {
-		return Result{LookupErrors:1}
+		return Result{LookupErrors: 1}
 	}
 
 	if len(record.Subdivisions) == 0 {
-		return Result{NoStateErrors:1}
+		return Result{NoStateErrors: 1}
 	}
 
 	if record.Subdivisions[0].IsoCode == state {
-		return Result{Matches:1}
+		return Result{Matches: 1}
 	}
 
 	return Result{}
