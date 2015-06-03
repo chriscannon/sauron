@@ -44,22 +44,15 @@ func Run(geoIpFilePath string, state string, inputFile *os.File) (*Result, error
 }
 
 func makeWorkers(numWorkers int, db *geoip2.Reader, state string, file *os.File) <-chan Result {
-	inputChan := make(chan string)
+	inputChan := make(chan string, numWorkers)
 	outputChan := make(chan Result, numWorkers)
-	closer := make(chan struct{})
 	wg := new(sync.WaitGroup)
 
 	for i := 0; i < numWorkers; i++ {
 		wg.Add(1)
 		go func() {
-		LOOP:
-			for {
-				select {
-				case ip := <-inputChan:
-					outputChan <- parseIp(ip, db, state)
-				case <-closer:
-					break LOOP
-				}
+			for ip := range inputChan {
+				outputChan <- parseIp(ip, db, state)
 			}
 			wg.Done()
 		}()
@@ -72,7 +65,7 @@ func makeWorkers(numWorkers int, db *geoip2.Reader, state string, file *os.File)
 			inputChan <- scanner.Text()
 		}
 
-		close(closer)
+		close(inputChan)
 		wg.Wait()
 		close(outputChan)
 	}()
