@@ -6,6 +6,7 @@ import (
 	"os"
 	"runtime"
 	"sync"
+	"strings"
 
 	"github.com/oschwald/geoip2-golang"
 )
@@ -29,7 +30,7 @@ func Run(geoIpFilePath string, state string, country string, inputFile *os.File)
 		return nil, err
 	}
 
-	results := makeWorkers(numWorkers, db, state, country, inputFile)
+	results := makeWorkers(numWorkers, db, CleanIso(state), CleanIso(country), inputFile)
 
 	result := Result{0, 0, 0, 0, 0}
 	for r := range results {
@@ -41,6 +42,10 @@ func Run(geoIpFilePath string, state string, country string, inputFile *os.File)
 	}
 
 	return &result, nil
+}
+
+func CleanIso(input string) string {
+	return strings.ToUpper(strings.TrimSpace(input))
 }
 
 func makeWorkers(numWorkers int, db *geoip2.Reader, state string, country string, file *os.File) <-chan Result {

@@ -6,7 +6,6 @@ import (
 	"log"
 	"os"
 	"runtime/pprof"
-	"strings"
 
 	"github.com/dustin/go-humanize"
 )
@@ -41,8 +40,6 @@ func main() {
 		flag.Usage()
 		os.Exit(1)
 	}
-	state := strings.ToUpper(strings.TrimSpace(*flState))
-	country := strings.ToUpper(strings.TrimSpace(*flCountry))
 
 	if *flGeoIpFile == "" {
 		fmt.Println("Please specify a GeoIP2 City file.")
@@ -71,14 +68,14 @@ func main() {
 
 	fmt.Println("Processing...")
 
-	result, err := Run(*flGeoIpFile, state, country, inputFile)
+	result, err := Run(*flGeoIpFile, *flState, *flCountry, inputFile)
 
 	if err != nil {
 		log.Fatal(err)
 	}
 
 	fmt.Printf("# of Lines: %s\n", humanize.Comma(result.TotalLines))
-	fmt.Printf("# of IPs from %s: %s\n", state, humanize.Comma(result.Matches))
+	fmt.Printf("# of IPs from %s: %s\n", CleanIso(*flState), humanize.Comma(result.Matches))
 
 	if result.ParseErrors > 0 {
 		fmt.Printf("# of Unparseable IPs: %s\n", humanize.Comma(result.ParseErrors))
