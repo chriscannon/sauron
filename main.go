@@ -13,6 +13,7 @@ import (
 
 var (
 	flState      = flag.String("state", "", "Set the state (a.k.a. subdivision) to filter on")
+	flCountry    = flag.String("country", "USA", "Set the country to filter on")
 	flGeoIpFile  = flag.String("geoip", "", "Set the path to the GeoIP2 City file")
 	flHelp       = flag.Bool("help", false, "Print usage")
 	flInputFile  = flag.String("input", "", "Set the input file of IP addresses")
@@ -41,6 +42,7 @@ func main() {
 		os.Exit(1)
 	}
 	state := strings.ToUpper(strings.TrimSpace(*flState))
+	country := strings.ToUpper(strings.TrimSpace(*flCountry))
 
 	if *flGeoIpFile == "" {
 		fmt.Println("Please specify a GeoIP2 City file.")
@@ -67,7 +69,9 @@ func main() {
 		defer pprof.StopCPUProfile()
 	}
 
-	result, err := Run(*flGeoIpFile, state, inputFile)
+	fmt.Println("Processing...")
+
+	result, err := Run(*flGeoIpFile, state, country, inputFile)
 
 	if err != nil {
 		log.Fatal(err)

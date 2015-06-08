@@ -18,7 +18,7 @@ type Result struct {
 	TotalLines    int64
 }
 
-func Run(geoIpFilePath string, state string, inputFile *os.File) (*Result, error) {
+func Run(geoIpFilePath string, state string, country string, inputFile *os.File) (*Result, error) {
 	numWorkers := runtime.NumCPU()
 	runtime.GOMAXPROCS(numWorkers)
 
@@ -29,7 +29,7 @@ func Run(geoIpFilePath string, state string, inputFile *os.File) (*Result, error
 		return nil, err
 	}
 
-	results := makeWorkers(numWorkers, db, state, inputFile)
+	results := makeWorkers(numWorkers, db, state, country, inputFile)
 
 	result := Result{0, 0, 0, 0, 0}
 	for r := range results {
@@ -43,7 +43,7 @@ func Run(geoIpFilePath string, state string, inputFile *os.File) (*Result, error
 	return &result, nil
 }
 
-func makeWorkers(numWorkers int, db *geoip2.Reader, state string, file *os.File) <-chan Result {
+func makeWorkers(numWorkers int, db *geoip2.Reader, state string, country string, file *os.File) <-chan Result {
 	inputChan := make(chan string, numWorkers)
 	outputChan := make(chan Result, numWorkers)
 	wg := new(sync.WaitGroup)
@@ -52,7 +52,7 @@ func makeWorkers(numWorkers int, db *geoip2.Reader, state string, file *os.File)
 		wg.Add(1)
 		go func() {
 			for ip := range inputChan {
-				outputChan <- parseIp(ip, db, state)
+				outputChan <- parseIp(ip, db, state, country)
 			}
 			wg.Done()
 		}()
@@ -73,7 +73,7 @@ func makeWorkers(numWorkers int, db *geoip2.Reader, state string, file *os.File)
 	return outputChan
 }
 
-func parseIp(ipString string, db *geoip2.Reader, state string) Result {
+func parseIp(ipString string, db *geoip2.Reader, state string, country string) Result {
 	ip := net.ParseIP(ipString)
 	if ip == nil {
 		return Result{ParseErrors: 1}
@@ -85,12 +85,14 @@ func parseIp(ipString string, db *geoip2.Reader, state string) Result {
 		return Result{LookupErrors: 1}
 	}
 
-	if len(record.Subdivisions) == 0 {
-		return Result{NoStateErrors: 1}
-	}
+	if record.Country.IsoCode == country {
+		if len(record.Subdivisions) == 0 {
+			return Result{NoStateErrors: 1}
+		}
 
-	if record.Subdivisions[0].IsoCode == state {
-		return Result{Matches: 1}
+		if record.Subdivisions[0].IsoCode == state {
+			return Result{Matches: 1}
+		}
 	}
 
 	return Result{}
