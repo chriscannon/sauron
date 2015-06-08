@@ -79,7 +79,16 @@ func main() {
 
 	fmt.Printf("# of Lines: %s\n", humanize.Comma(result.TotalLines))
 	fmt.Printf("# of IPs from %s: %s\n", state, humanize.Comma(result.Matches))
-	fmt.Printf("# of Unparseable IPs: %s\n", humanize.Comma(result.ParseErrors))
-	fmt.Printf("# of GeoIP2 Lookup Errors: %s\n", humanize.Comma(result.LookupErrors))
-	fmt.Printf("# of GeoIP2 No State Found Errors: %s\n", humanize.Comma(result.NoStateErrors))
+
+	if result.ParseErrors > 0 {
+		fmt.Printf("# of Unparseable IPs: %s\n", humanize.Comma(result.ParseErrors))
+	}
+
+	if result.LookupErrors > 0 {
+		fmt.Printf("# of GeoIP2 Lookup Errors: %s\n", humanize.Comma(result.LookupErrors))
+	}
+
+	if result.NoStateErrors > 0 {
+		fmt.Printf("# of GeoIP2 No State Found Errors: %s\n", humanize.Comma(result.NoStateErrors))
+	}
 }
