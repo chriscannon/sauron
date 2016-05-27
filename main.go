@@ -75,7 +75,8 @@ func main() {
 	}
 
 	fmt.Printf("# of Lines: %s\n", humanize.Comma(result.TotalLines))
-	fmt.Printf("# of IPs from %s: %s\n", CleanIso(*flState), humanize.Comma(result.Matches))
+	fmt.Printf("# of IPs from %s: %s\n", CleanIso(*flCountry), humanize.Comma(result.CountryMatches))
+	fmt.Printf("# of IPs from %s: %s\n", CleanIso(*flState), humanize.Comma(result.StateMatches))
 
 	if result.ParseErrors > 0 {
 		fmt.Printf("# of Unparseable IPs: %s\n", humanize.Comma(result.ParseErrors))

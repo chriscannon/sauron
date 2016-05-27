@@ -12,11 +12,12 @@ import (
 )
 
 type Result struct {
-	Matches       int64
-	ParseErrors   int64
-	LookupErrors  int64
-	NoStateErrors int64
-	TotalLines    int64
+	StateMatches   int64
+	CountryMatches int64
+	ParseErrors    int64
+	LookupErrors   int64
+	NoStateErrors  int64
+	TotalLines     int64
 }
 
 func Run(geoIpFilePath string, state string, country string, inputFile *os.File) (*Result, error) {
@@ -32,10 +33,11 @@ func Run(geoIpFilePath string, state string, country string, inputFile *os.File)
 
 	results := makeWorkers(numWorkers, db, CleanIso(state), CleanIso(country), inputFile)
 
-	result := Result{0, 0, 0, 0, 0}
+	result := Result{0, 0, 0, 0, 0, 0}
 	for r := range results {
 		result.TotalLines += 1
-		result.Matches += r.Matches
+		result.StateMatches += r.StateMatches
+		result.CountryMatches += r.CountryMatches
 		result.ParseErrors += r.ParseErrors
 		result.NoStateErrors += r.NoStateErrors
 		result.LookupErrors += r.LookupErrors
@@ -91,13 +93,15 @@ func parseIp(ipString string, db *geoip2.Reader, state string, country string) R
 	}
 
 	if record.Country.IsoCode == country {
+		r := Result{CountryMatches: 1}
 		if len(record.Subdivisions) == 0 {
-			return Result{NoStateErrors: 1}
+			return Result{NoStateErrors:1}
 		}
 
 		if record.Subdivisions[0].IsoCode == state {
-			return Result{Matches: 1}
+			r.StateMatches = 1
 		}
+		return r
 	}
 
 	return Result{}
