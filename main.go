@@ -12,7 +12,7 @@ import (
 
 var (
 	flState      = flag.String("state", "", "Set the state (a.k.a. subdivision) to filter on")
-	flCountry    = flag.String("country", "USA", "Set the country to filter on")
+	flCountry    = flag.String("country", "US", "Set the country to filter on")
 	flGeoIpFile  = flag.String("geoip", "", "Set the path to the GeoIP2 City file")
 	flHelp       = flag.Bool("help", false, "Print usage")
 	flInputFile  = flag.String("input", "", "Set the input file of IP addresses")
