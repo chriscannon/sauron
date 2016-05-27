@@ -15,6 +15,8 @@ Reading from a file
 
 ## Input
 As input sauron expects a list of IPv4 IP addresses each on its own line. E.g.,
+```
 10.0.0.1
 10.0.0.2
 10.0.0.3
+```
