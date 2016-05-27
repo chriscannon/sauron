@@ -21,9 +21,10 @@ var (
 
 func init() {
 	flag.Usage = func() {
-		fmt.Printf("Usage: sauron [OPTIONS]\n\nA concurrent utility to resolve IPs to states.\n\nOptions:\n")
+		fmt.Printf("Usage: sauron [OPTIONS]\n\nA concurrent utility to resolve IPs to countries and states.\n\nOptions:\n")
 		flag.CommandLine.SetOutput(os.Stdout)
 		flag.PrintDefaults()
+		fmt.Printf("\nAs input sauron expects a list of IPv4 IP addresses each on its own line. E.g.,\n10.0.0.1\n10.0.0.2\n10.0.0.3\n")
 	}
 }
 
